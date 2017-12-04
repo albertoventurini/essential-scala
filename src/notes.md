@@ -115,3 +115,48 @@ final case class B() extends A
 final case class C() extends A
 ```
 
+# Chapter 5 - Modelling data with generic types
+
+## Fold Pattern
+
+Fold is not limited to sequences. Indeed, the fold pattern can be applied to any
+algebraic data type.
+
+For an algebraic data type A, fold converts it to a generic type B. Fold is a structural recursion with:
+- one function parameter for each case in A;
+- each function takes as parameters the fields for its associated class;
+- if A is recursive, any function parameters that refer to a recursive field take a parameter of type B.
+The right-hand side of pattern matching cases, or the polymorphic methods as appropriate, consists of
+calls to the appropriate function.
+
+Example with `Maybe`:
+
+```
+sealed trait Maybe[A] {
+
+  def fold[B](empty: B, full: A => B): B = this match {
+    case Empty() => empty
+    case Full(value) => full(value)
+  }
+
+}
+
+final case class Full[A](value: A) extends Maybe[A]
+final case class Empty[A]() extends Maybe[A]
+```
+
+Example with `Sum` (which is basically like `Either`):
+
+```
+sealed trait Sum[A, B] {
+
+  def fold[C](left: A => C, right: B => C): C = this match {
+    case Left(value) => left(value)
+    case Right(value) => right(value)
+  }
+
+}
+
+final case class Left[A, B](value: A) extends Sum[A, B]
+final case class Right[A, B](value: B) extends Sum[A, B]
+```
