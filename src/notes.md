@@ -134,7 +134,11 @@ Example with `Maybe`:
 ```
 sealed trait Maybe[A] {
 
+  // Method parameters contain functions for each case class.
+  // In case of empty, the function collapses to a value.
   def fold[B](empty: B, full: A => B): B = this match {
+
+    // Here we pattern match all case classes
     case Empty() => empty
     case Full(value) => full(value)
   }
@@ -160,3 +164,27 @@ sealed trait Sum[A, B] {
 final case class Left[A, B](value: A) extends Sum[A, B]
 final case class Right[A, B](value: B) extends Sum[A, B]
 ```
+
+## Map
+
+Given a type `F[A]` and a function `A => B`, map gives `F[B]`.
+
+For example, given a `Maybe[User]` and a function `User => Order`, map gives a `Maybe[Order]`.
+
+## FlatMap
+
+Given a type `F[A]` and a function `A => F[B]`, flatMap gives `F[B]`.
+
+For example, given a `Maybe[User]` and a function `User => Maybe[Order]`, flatMap gives a `Maybe[Order]`.
+
+## Functors and monads
+
+A type `F[A]` with a `map` method is called a *functor*. If a functor also has a `flatMap`, it is called a *monad*.
+
+Monads are useful to sequence computations with context. An example of context is failure.
+So we can have a sequence of computations, each of which can fail, and we sequence them using a flatMap as such:
+
+```
+getUser().flatMap(getOrder(_))
+```
+
