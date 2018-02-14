@@ -188,3 +188,42 @@ So we can have a sequence of computations, each of which can fail, and we sequen
 getUser().flatMap(getOrder(_))
 ```
 
+# Chapter 6
+
+## For comprehension
+
+Another convenient way to chain monadic operations together is provided by *for comprehensions*.
+
+For example, suppose we are using the `Either` monad to denote an operation that can either succeed or return an error message:
+
+```
+  def safeOperand(s: String): Either[String, Int] = {
+    try {
+      Right(s.toInt)
+    } catch {
+      case e: Exception => Left(s"Operand $s is not an int")
+    }
+  }
+```
+
+The `Either` monad is right-biased, which means that the right side implements `flatMap` and `map`
+in a way that chains further operations, whereas the left side stops the chain. We can use `Either` with `flatMap`:
+
+```
+safeOperand("1").flatMap(o1 => safeOperand("2").map(o2 => o1 + o2)) // Right(3)
+safeOperand("1").flatMap(o1 => safeOperand("abc").map(o2 => o1 + o2)) // Left(Operand abc is not an int)
+```
+
+A for comprehension is arguably more readable:
+
+```
+for {
+  o1 <- safeOperand("1")    // 'o1' is bound to an Int (not a Right[Int])
+  o2 <- safeOperand("abc")  // 'o2' is bound to an Int (not a Right[Int])
+} yield o1 + o2             // the result is wrapped back into a Right[Int]
+```
+
+In the example above, the chain of generators will short-circuit if a generator provides a `Left` value;
+on the other hand, it will reach the `yield` expression if all the generators have provided `Right` values.
+The result of the `yield` expression is then wrapped back into a monad.
+
